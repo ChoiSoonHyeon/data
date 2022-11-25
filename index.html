@@ -1,8 +1,93 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    Hello world!
+    <div>
+      <canvas id="myChart"></canvas>
+    </div>
+    <script>
+      const CHART_COLORS = {
+        red: 'rgb(255, 99, 132)',
+        orange: 'rgb(255, 159, 64)',
+        yellow: 'rgb(255, 205, 86)',
+        green: 'rgb(75, 192, 192)',
+        blue: 'rgb(54, 162, 235)',
+        purple: 'rgb(153, 102, 255)',
+        grey: 'rgb(201, 203, 207)'
+      };
+      const START_DATE = moment('2022-11-25');
+      const PERIOD = 365;
+      const labels = [START_DATE.format('YY-MM-DD')];
+      let nowDate = START_DATE;
+      for (let index = 1; index < PERIOD; index++) {
+        labels.push(nowDate.add(1, 'day').format("YY-MM-DD")); 
+      }
+
+      const STANDARD_WEIGHT = 64.3;
+      const INITIAL_WEIGHT = 106.1;
+      const TARGET_WEIGHT = 65;
+      const LOSS_WEIGHT = INITIAL_WEIGHT - TARGET_WEIGHT;
+      const LOSS_WEIGHT_DAY = LOSS_WEIGHT / PERIOD;
+      const TARGET_DATA = [INITIAL_WEIGHT];
+      const STANDARD_DATA = [STANDARD_WEIGHT];
+      let nowTargetData = INITIAL_WEIGHT;
+      for (let index = 1; index < PERIOD; index++) {
+        nowTargetData = nowTargetData - LOSS_WEIGHT_DAY;
+        TARGET_DATA.push(nowTargetData)
+        STANDARD_DATA.push(STANDARD_WEIGHT);
+      }
+
+      const ACTUAL_DATA = [106.1];
+
+      const ctx = document.getElementById('myChart');
+      const data = {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Target Value',
+            data: TARGET_DATA,
+            borderColor: CHART_COLORS.red,
+            backgroundColor: CHART_COLORS.red,
+          },
+          {
+            label: 'Actual Value',
+            data: ACTUAL_DATA,
+            borderColor: CHART_COLORS.blue,
+            backgroundColor: CHART_COLORS.blue,
+          },
+          {
+            label: 'Standard Value',
+            data: STANDARD_DATA,
+            borderColor: CHART_COLORS.gray,
+            backgroundColor: CHART_COLORS.gray,
+          }
+        ]
+      };
+      const config = {
+        type: 'line',
+        data: data,
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              min: 0,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'For health, my goal is to be normal.'
+            }
+          }
+        },
+      };
+      new Chart(ctx, config);
+    </script>
   </body>
 </html>
