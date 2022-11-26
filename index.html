@@ -1,16 +1,42 @@
 <!DOCTYPE html>
 <html>
-  <title>순현의 목표</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=2.0">
   <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
+  <style>
+    #container {
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #cccccc;
+    }
+    button {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background-color: dodgerblue;
+      color: white;
+      width: 80px;
+    }
+  </style>
   <body>
-    <div>
-      <canvas id="myChart"></canvas>
+    <div id="container">
+      <section>
+        <h1>순현의 목표</h1>
+        <input type="text" id="startDate" value="2022-11-25" disabled>
+        <input type="text" id="targetDate" placeholder="목표 날짜 (yyyy-mm-dd)">
+        <button id="submit">실행</button>
+      </section>
+      <canvas id="yearChart"></canvas>
     </div>
     <script>
+      const ACTUAL_DATA = [106.1];
+
+      let chart;
+
       const CHART_COLORS = {
         red: 'rgb(255, 99, 132)',
         orange: 'rgb(255, 159, 64)',
@@ -20,76 +46,109 @@
         purple: 'rgb(153, 102, 255)',
         grey: 'rgb(201, 203, 207)'
       };
-      const START_DATE = moment('2022-11-25');
-      const PERIOD = 365;
-      const labels = [START_DATE.format('YY-MM-DD')];
-      let nowDate = START_DATE;
-      for (let index = 1; index < PERIOD; index++) {
-        labels.push(nowDate.add(1, 'day').format("YY-MM-DD")); 
-      }
 
-      const STANDARD_WEIGHT = 64.3;
-      const INITIAL_WEIGHT = 106.1;
-      const TARGET_WEIGHT = 65;
-      const LOSS_WEIGHT = INITIAL_WEIGHT - TARGET_WEIGHT;
-      const LOSS_WEIGHT_DAY = LOSS_WEIGHT / PERIOD;
-      const TARGET_DATA = [INITIAL_WEIGHT];
-      const STANDARD_DATA = [STANDARD_WEIGHT];
-      let nowTargetData = INITIAL_WEIGHT;
-      for (let index = 1; index < PERIOD; index++) {
-        nowTargetData = nowTargetData - LOSS_WEIGHT_DAY;
-        TARGET_DATA.push(nowTargetData)
-        STANDARD_DATA.push(STANDARD_WEIGHT);
-      }
+      const getData = (params) => {
+        const START_DATE = params.startDate;
+        const PERIOD = params.period;
+        const labels = [START_DATE.format('YY-MM-DD')];
+        let nowDate = START_DATE;
+        for (let index = 1; index < PERIOD; index++) {
+          labels.push(nowDate.add(1, 'day').format("YY-MM-DD")); 
+        }
 
-      const ACTUAL_DATA = [106.1];
+        const STANDARD_WEIGHT = params.standardWeight;
+        const INITIAL_WEIGHT = params.initialWeight;
+        const TARGET_WEIGHT = params.targetWeight;
+        const LOSS_WEIGHT = INITIAL_WEIGHT - TARGET_WEIGHT;
+        const LOSS_WEIGHT_DAY = LOSS_WEIGHT / PERIOD;
+        const TARGET_DATA = [INITIAL_WEIGHT];
+        const STANDARD_DATA = [STANDARD_WEIGHT];
+        let nowTargetData = INITIAL_WEIGHT;
+        for (let index = 1; index < PERIOD; index++) {
+          nowTargetData = nowTargetData - LOSS_WEIGHT_DAY;
+          TARGET_DATA.push(nowTargetData)
+          STANDARD_DATA.push(STANDARD_WEIGHT);
+        }
 
-      const ctx = document.getElementById('myChart');
-      const data = {
-        labels: labels,
-        datasets: [
-          {
-            label: 'Target Value',
-            data: TARGET_DATA,
-            borderColor: CHART_COLORS.red,
-            backgroundColor: CHART_COLORS.red,
-          },
-          {
-            label: 'Actual Value',
-            data: ACTUAL_DATA,
-            borderColor: CHART_COLORS.blue,
-            backgroundColor: CHART_COLORS.blue,
-          },
-          {
-            label: 'Standard Value',
-            data: STANDARD_DATA,
-            borderColor: CHART_COLORS.gray,
-            backgroundColor: CHART_COLORS.gray,
-          }
-        ]
-      };
-      const config = {
-        type: 'line',
-        data: data,
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              min: 0,
-            }
-          },
-          plugins: {
-            legend: {
-              position: 'top',
+        const data = {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Target Value',
+              data: TARGET_DATA,
+              borderColor: CHART_COLORS.red,
+              backgroundColor: CHART_COLORS.red,
             },
-            title: {
-              display: true,
-              text: 'For health, my goal is to be normal.'
+            {
+              label: 'Actual Value',
+              data: params.actualData,
+              borderColor: CHART_COLORS.blue,
+              backgroundColor: CHART_COLORS.blue,
+            },
+            {
+              label: 'Standard Value',
+              data: STANDARD_DATA,
+              borderColor: CHART_COLORS.gray,
+              backgroundColor: CHART_COLORS.gray,
             }
+          ]
+        };
+
+        return data;
+      }
+
+      const drawChart = (startDate, targetDate, period) => {
+        const yearChartConfig = {
+          type: 'line',
+          data: getData({
+            startDate: moment(startDate),
+            period: period,
+            standardWeight: 64.3,
+            initialWeight: 106.1,
+            targetWeight: 65,
+            actualData: ACTUAL_DATA,
+          }),
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                min: 0,
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: startDate + ' ~ ' + targetDate
+              }
+            }
+          },
+        };
+
+        const yearChart = document.getElementById('yearChart');
+        return new Chart(yearChart, yearChartConfig);
+      }
+
+      document.getElementById("submit").onclick = () => {
+          const startDate = document.getElementById("startDate").value;
+          const targetDate = document.getElementById("targetDate").value;
+          const period = moment(targetDate).diff(moment(startDate), 'days') + 1;
+          if (isNaN(period)) {
+            alert("올바른 날짜를 입력해주세요. (예: 2022-11-25)");
+          } else {
+            chart.destroy();
+            chart = drawChart(startDate, targetDate, period);
           }
-        },
-      };
-      new Chart(ctx, config);
+      }
+
+      const initialize = () => {
+        chart = drawChart("2022-11-25", "2023-11-25", 365);
+      }
+
+      initialize();
     </script>
+    
   </body>
 </html>
