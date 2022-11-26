@@ -60,7 +60,7 @@
         const INITIAL_WEIGHT = params.initialWeight;
         const TARGET_WEIGHT = params.targetWeight;
         const LOSS_WEIGHT = INITIAL_WEIGHT - TARGET_WEIGHT;
-        const LOSS_WEIGHT_DAY = LOSS_WEIGHT / PERIOD;
+        const LOSS_WEIGHT_DAY = LOSS_WEIGHT / 365;
         const TARGET_DATA = [INITIAL_WEIGHT];
         const STANDARD_DATA = [STANDARD_WEIGHT];
         let nowTargetData = INITIAL_WEIGHT;
